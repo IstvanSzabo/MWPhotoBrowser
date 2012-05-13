@@ -122,7 +122,8 @@
 	
 	// Create browser
 	MWPhotoBrowser *browser = [[MWPhotoBrowser alloc] initWithDelegate:self];
-    browser.displayActionButton = YES;
+//    browser.displayActionButton = YES;
+    browser.displayToolbar = NO;
     //browser.wantsFullScreenLayout = NO;
     //[browser setInitialPageIndex:2];
     
@@ -157,6 +158,10 @@
     if (index < _photos.count)
         return [_photos objectAtIndex:index];
     return nil;
+}
+
+- (void) photoBrowser:(MWPhotoBrowser *)photoBrowser didReceiveSingleTapAtPageIndex:(NSUInteger)index{
+    NSLog(@"did single tap at page = %d", index);
 }
 
 //- (MWCaptionView *)photoBrowser:(MWPhotoBrowser *)photoBrowser captionViewForPhotoAtIndex:(NSUInteger)index {

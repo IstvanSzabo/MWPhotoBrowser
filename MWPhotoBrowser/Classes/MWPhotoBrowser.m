@@ -139,6 +139,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 @synthesize displayActionButton = _displayActionButton, actionsSheet = _actionsSheet;
 @synthesize progressHUD = _progressHUD;
 @synthesize previousViewControllerBackButton = _previousViewControllerBackButton;
+@synthesize displayToolbar = _displayToolbar;
 
 #pragma mark - NSObject
 
@@ -157,6 +158,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         _recycledPages = [[NSMutableSet alloc] init];
         _photos = [[NSMutableArray alloc] init];
         _displayActionButton = NO;
+        _displayToolbar = YES;
         _didSavePreviousStateOfNavBar = NO;
         
         // Listen for MWPhoto notifications
@@ -262,7 +264,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 }
 
 - (void)performLayout {
-    
+
     // Setup
     _performingLayout = YES;
     NSUInteger numberOfPhotos = [self numberOfPhotos];
@@ -326,6 +328,8 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         previousViewController.navigationItem.backBarButtonItem = newBackButton;
     }
     
+
+    
     // Content offset
 	_pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:_currentPageIndex];
     [self tilePages];
@@ -356,20 +360,27 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 	// Layout manually (iOS < 5)
     if (SYSTEM_VERSION_LESS_THAN(@"5")) [self viewWillLayoutSubviews];
     
-    // Status bar
-    if (self.wantsFullScreenLayout && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        _previousStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
-        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:animated];
+    
+    if(_displayToolbar == YES){
+        // Status bar
+        if (self.wantsFullScreenLayout && UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+            _previousStatusBarStyle = [[UIApplication sharedApplication] statusBarStyle];
+            [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleBlackTranslucent animated:animated];
+        }
+        
+        // Navigation bar appearance
+        if (!_viewIsActive && [self.navigationController.viewControllers objectAtIndex:0] != self) {
+            [self storePreviousNavBarAppearance];
+        }
+        [self setNavBarAppearance:animated];
+        
+        // Update UI
+        [self hideControlsAfterDelay];
+        
+    }else{
+        [self setControlsHidden:YES animated:NO permanent:NO];
     }
     
-    // Navigation bar appearance
-    if (!_viewIsActive && [self.navigationController.viewControllers objectAtIndex:0] != self) {
-        [self storePreviousNavBarAppearance];
-    }
-    [self setNavBarAppearance:animated];
-    
-    // Update UI
-	[self hideControlsAfterDelay];
     
 }
 
@@ -969,7 +980,14 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 
 - (BOOL)areControlsHidden { return (_toolbar.alpha == 0); /* [UIApplication sharedApplication].isStatusBarHidden; */ }
 - (void)hideControls { [self setControlsHidden:YES animated:YES permanent:NO]; }
-- (void)toggleControls { [self setControlsHidden:![self areControlsHidden] animated:YES permanent:NO]; }
+- (void)toggleControls { 
+    if(_displayToolbar == YES){
+        [self setControlsHidden:![self areControlsHidden] animated:YES permanent:NO]; 
+    }else{
+        [_delegate photoBrowser: self didReceiveSingleTapAtPageIndex: _currentPageIndex];
+    }
+}
+
 
 #pragma mark - Properties
 
